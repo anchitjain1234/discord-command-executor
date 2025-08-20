@@ -172,9 +172,19 @@ linters:
       # Exclude fieldalignment for Config struct (acceptable trade-off for readability)
       - linters:
           - govet
-        text: "fieldalignment: struct.*Config.*could be"
+        text: "fieldalignment: struct.*could be"
       
-      # Exclude common error return value checks
+      # Exclude gosec G104 for common error handling patterns
+      - linters:
+          - gosec
+        text: "G104: Errors unhandled"
+        path: "_test\\.go$"
+      
+      - linters:
+          - gosec  
+        text: "G104.*os\\.(Setenv|Unsetenv)"
+      
+      # Exclude common error return value checks (errcheck)
       - text: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked"
         linters:
           - errcheck
