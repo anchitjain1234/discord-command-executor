@@ -1,0 +1,240 @@
+# GitHub Actions CI workflow for Discord Command Executor
+# This workflow runs tests, linting, and builds on multiple Go versions and platforms
+
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  GO_VERSION: '1.23.4'
+  GOLANGCI_LINT_VERSION: 'v2.4.0'
+
+jobs:
+  # Job 1: Code Quality and Testing
+  test:
+    name: Test and Lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22', '1.23']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+        cache: true
+    
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-${{ matrix.go-version }}-
+    
+    - name: Download dependencies
+      run: |
+        go mod download
+        go mod verify
+    
+    - name: Run go vet
+      run: go vet ./...
+    
+    - name: Run tests
+      run: |
+        mkdir -p test-results
+        go test -race -timeout=30s -coverprofile=test-results/coverage.out -covermode=atomic ./...
+    
+    - name: Generate coverage report
+      run: |
+        go tool cover -func=test-results/coverage.out
+        go tool cover -html=test-results/coverage.out -o test-results/coverage.html
+    
+    - name: Upload coverage to Codecov
+      if: matrix.go-version == env.GO_VERSION
+      uses: codecov/codecov-action@v3
+      with:
+        file: test-results/coverage.out
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-go${{ matrix.go-version }}
+        path: test-results/
+
+  # Job 2: Linting
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+    
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v7
+      with:
+        version: ${{ env.GOLANGCI_LINT_VERSION }}
+        args: --timeout=5m
+
+  # Job 3: Security scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+    
+    - name: Run Gosec Security Scanner
+      uses: securego/gosec@master
+      with:
+        args: './...'
+
+  # Job 4: Build for multiple platforms
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+        exclude:
+          # Windows ARM64 builds are not commonly needed
+          - goos: windows
+            goarch: arm64
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Build binary
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+        BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+        GIT_COMMIT=$(git rev-parse HEAD)
+        
+        LDFLAGS="-s -w -X main.version=${VERSION} -X main.buildTime=${BUILD_TIME} -X main.gitCommit=${GIT_COMMIT}"
+        
+        mkdir -p build
+        
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          BINARY_NAME="bot-${{ matrix.goos }}-${{ matrix.goarch }}.exe"
+        else
+          BINARY_NAME="bot-${{ matrix.goos }}-${{ matrix.goarch }}"
+        fi
+        
+        go build -trimpath -ldflags "${LDFLAGS}" -o "build/${BINARY_NAME}" cmd/bot/main.go
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: build/
+
+  # Job 5: Integration tests (if Docker is available)
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: false  # Disabled by default, enable when Docker integration is ready
+    
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+    
+    - name: Run integration tests
+      run: |
+        # Add integration test commands here
+        echo "Integration tests would run here"
+
+  # Job 6: Release (only on tags)
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [test, lint, security, build]
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+    
+    - name: Prepare release assets
+      run: |
+        mkdir -p release
+        find artifacts/ -name "bot-*" -type f -exec cp {} release/ \;
+        
+        # Create checksums
+        cd release
+        sha256sum * > checksums.txt
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: release/*
+        generate_release_notes: true
+        draft: false
+        prerelease: ${{ contains(github.ref, '-') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,212 @@
+# golangci-lint configuration for Discord Command Executor
+# Version 2.x configuration format - schema compliant
+version: "2"
+
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
+  build-tags:
+    - integration
+
+# Simplified output configuration for v2
+output:
+  formats:
+    text:
+      print-linter-name: true
+      print-issued-lines: true
+
+# Severity configuration
+severity:
+  default: error
+  rules:
+    - linters:
+        - dupl
+      severity: info
+    - linters:
+        - goconst
+      severity: info
+
+linters:
+  # Use only specific linters (none by default)
+  default: none
+  
+  # Enable specific linters
+  enable:
+    # Error detection
+    - errcheck          # Checks for unchecked errors
+    - gosec             # Security issues
+    - govet             # Standard Go vet checks
+    
+    # Code quality
+    - gocyclo           # Cyclomatic complexity
+    - revive            # Replacement for golint
+    - ineffassign       # Ineffectual assignments
+    - misspell          # Spelling mistakes
+    - unconvert         # Unnecessary type conversions
+    - unused            # Unused constants, variables, functions and types
+    
+    # Performance
+    - prealloc          # Slice preallocation
+    
+    # Style and best practices
+    - goconst           # Repeated strings that could be constants
+    - gocritic          # Comprehensive Go source code analysis
+    - mnd               # Magic number detection
+    - nakedret          # Naked returns in long functions
+    - unparam           # Unused function parameters
+    - whitespace        # Whitespace issues
+    
+    # Complexity
+    - dupl              # Code duplication
+    - lll               # Line length limit
+  
+  # Linter-specific settings
+  settings:
+    dupl:
+      threshold: 100
+    
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+      exclude-functions:
+        - io/ioutil.ReadFile
+        - io.Copy(*bytes.Buffer)
+        - io.Copy(os.Stdout)
+    
+    gocyclo:
+      min-complexity: 15
+    
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+      match-constant: true
+      numbers: false
+      ignore-calls: true
+    
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+      disabled-checks:
+        - dupImport
+        - octalLiteral
+        - whyNoLint
+        - wrapperFunc
+    
+    revive:
+      rules:
+        - name: exported
+          arguments: ["checkPrivateReceivers","sayRepetitiveInsteadOfStutters"]
+    
+    mnd:
+      checks:
+        - argument
+        - case
+        - condition
+        - return
+    
+    lll:
+      line-length: 120
+      tab-width: 4
+    
+    govet:
+      enable:
+        - fieldalignment
+    
+    misspell:
+      locale: US
+    
+    nakedret:
+      max-func-lines: 30
+    
+    prealloc:
+      simple: true
+      range-loops: true
+      for-loops: false
+    
+    unparam:
+      check-exported: false
+    
+    whitespace:
+      multi-if: false
+      multi-func: false
+
+  # Issues exclusions in v2 format
+  exclusions:
+    paths:
+      - "vendor/"
+      - "build/"
+      - "scripts/"
+      - ".*\\.pb\\.go$"
+      - ".*_generated\\.go$"
+    
+    rules:
+      # Exclude some linters from running on tests files
+      - path: "_test\\.go$"
+        linters:
+          - mnd
+          - goconst
+          - dupl
+          - lll
+      
+      # Exclude gocritic unnecessaryDefer
+      - linters:
+          - gocritic
+        text: "unnecessaryDefer:"
+      
+      # Exclude common magic numbers
+      - linters:
+          - mnd
+        text: "Magic number: (0|0\\.5|1|2|8|10|16|32|64|100|128|200|400|404|500|1000|1024|4096|8080)"
+      
+      # Exclude ineffassign for error shadowing in tests
+      - path: "_test\\.go$"
+        text: "ineffectual assignment to err"
+        linters:
+          - ineffassign
+      
+      # Exclude fieldalignment for Config struct (acceptable trade-off for readability)
+      - linters:
+          - govet
+        text: "fieldalignment: struct.*could be"
+      
+      # Exclude gosec G104 for common error handling patterns
+      - linters:
+          - gosec
+        text: "G104: Errors unhandled"
+        path: "_test\\.go$"
+      
+      - linters:
+          - gosec  
+        text: "G104.*os\\.(Setenv|Unsetenv)"
+      
+      # Exclude common error return value checks (errcheck)
+      - text: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked"
+        linters:
+          - errcheck
+      
+      - text: "Error return value of `.*Close` is not checked"
+        linters:
+          - errcheck
+      
+      - text: "Error return value of `os.Setenv` is not checked"
+        linters:
+          - errcheck
+      
+      - text: "Error return value of `os.Unsetenv` is not checked"
+        linters:
+          - errcheck
+      
+      - text: "Error return value of `.*ReadInConfig` is not checked"
+        linters:
+          - errcheck
+
+formatters:
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/anchitjain1234/discord-command-executor
