@@ -108,24 +108,32 @@ func Load() (*Config, error) {
 
 	// Bind specific environment variables to ensure they're picked up during unmarshal
 	// This is necessary because viper's AutomaticEnv() doesn't always work with Unmarshal()
-	viper.BindEnv("bot.token")
-	viper.BindEnv("bot.prefix")
-	viper.BindEnv("bot.guild_id")
-	viper.BindEnv("bot.max_concurrent_commands")
-	viper.BindEnv("docker.host")
-	viper.BindEnv("docker.default_timeout")
-	viper.BindEnv("docker.max_runtime")
-	viper.BindEnv("docker.memory_limit")
-	viper.BindEnv("docker.cpu_limit")
-	viper.BindEnv("docker.network_name")
-	viper.BindEnv("logging.level")
-	viper.BindEnv("logging.format")
-	viper.BindEnv("logging.output_file")
-	viper.BindEnv("logging.report_caller")
-	viper.BindEnv("server.host")
-	viper.BindEnv("server.port")
-	viper.BindEnv("server.read_timeout")
-	viper.BindEnv("server.write_timeout")
+	envBindings := []string{
+		"bot.token",
+		"bot.prefix",
+		"bot.guild_id",
+		"bot.max_concurrent_commands",
+		"docker.host",
+		"docker.default_timeout",
+		"docker.max_runtime",
+		"docker.memory_limit",
+		"docker.cpu_limit",
+		"docker.network_name",
+		"logging.level",
+		"logging.format",
+		"logging.output_file",
+		"logging.report_caller",
+		"server.host",
+		"server.port",
+		"server.read_timeout",
+		"server.write_timeout",
+	}
+	
+	for _, key := range envBindings {
+		if err := viper.BindEnv(key); err != nil {
+			return nil, fmt.Errorf("failed to bind environment variable for %s: %w", key, err)
+		}
+	}
 
 	// Read configuration file if it exists
 	if err := viper.ReadInConfig(); err != nil {

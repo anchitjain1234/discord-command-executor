@@ -15,21 +15,12 @@ run:
   build-tags:
     - integration
   
-  # Skip directories
-  skip-dirs:
-    - vendor
-    - build
-    - scripts
-  
-  # Skip files
-  skip-files:
-    - ".*\\.pb\\.go$"
-    - ".*_generated\\.go$"
 
 # Output configuration
 output:
-  # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions
-  format: colored-line-number
+  # Formats: colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions
+  formats:
+    - format: colored-line-number
   
   # Print lines of code with issue
   print-issued-lines: true
@@ -106,10 +97,12 @@ linters-settings:
   
   # Configure gomnd (magic number detector)
   gomnd:
-    settings:
-      mnd:
-        # Don't include the "operation" and "assign"
-        checks: argument,case,condition,return
+    # Don't include the "operation" and "assign"
+    checks:
+      - argument
+      - case
+      - condition
+      - return
   
   # Configure lll for line length
   lll:
@@ -191,6 +184,17 @@ linters:
 
 # Issues configuration
 issues:
+  # Exclude directories (replacement for run.skip-dirs)
+  exclude-dirs:
+    - vendor
+    - build
+    - scripts
+  
+  # Exclude files (replacement for run.skip-files)
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*_generated\\.go$"
+  
   # List of regexps of issue texts to exclude
   exclude:
     # Exclude some linters from running on tests files
