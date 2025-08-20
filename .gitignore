@@ -54,6 +54,7 @@ Dockerfile.local
 # Testing
 coverage.out
 *.coverprofile
+test-results/
 
 # Application specific binaries
 bot
