@@ -2,7 +2,6 @@ module github.com/anchitjain1234/discord-command-executor
 
 go 1.23.0
 
-
 require (
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/docker/docker v28.3.3+incompatible

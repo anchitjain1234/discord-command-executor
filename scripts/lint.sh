@@ -199,7 +199,7 @@ if [[ "$GOLANGCI_LINT" == "true" ]]; then
             GOLANGCI_FLAGS="$GOLANGCI_FLAGS --verbose"
         fi
         
-        run_check "golangci-lint" "golangci-lint run $GOLANGCI_FLAGS"
+        run_check "golangci-lint" "golangci-lint run --config=.golangci.yml --timeout=5m $GOLANGCI_FLAGS"
     else
         echo -e "${YELLOW}golangci-lint not installed, skipping advanced linting${NC}"
         echo "Install with: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b \$(go env GOPATH)/bin"

@@ -12,7 +12,7 @@ on:
 
 env:
   GO_VERSION: '1.23.4'
-  GOLANGCI_LINT_VERSION: 'v1.61.0'
+  GOLANGCI_LINT_VERSION: 'v2.4.0'
 
 jobs:
   # Job 1: Code Quality and Testing
