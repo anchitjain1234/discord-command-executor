@@ -97,9 +97,12 @@ linters-settings:
       - whyNoLint
       - wrapperFunc
   
-  # Configure golint
-  golint:
+  # Configure revive (replacement for golint)
+  revive:
     min-confidence: 0.8
+    rules:
+      - name: exported
+        arguments: ["checkPrivateReceivers","sayRepetitiveInsteadOfStutters"]
   
   # Configure gomnd (magic number detector)
   gomnd:
@@ -113,9 +116,13 @@ linters-settings:
     line-length: 120
     tab-width: 4
   
-  # Configure maligned to detect structs that would take less memory if fields were sorted
-  maligned:
-    suggest-new: true
+  # Configure govet for fieldalignment (replacement for maligned)
+  govet:
+    enable:
+      - fieldalignment
+    settings:
+      fieldalignment:
+        suggest-new: true
   
   # Configure misspell
   misspell:
@@ -162,14 +169,11 @@ linters:
     - gocyclo          # Cyclomatic complexity
     - gofmt            # Code formatting
     - goimports        # Import formatting
-    - golint           # Google's Go style guide
+    - revive           # Replacement for golint
     - ineffassign      # Ineffectual assignments
     - misspell         # Spelling mistakes
     - unconvert        # Unnecessary type conversions
-    - unused           # Unused constants, variables, functions and types
-    - deadcode         # Dead code detection
-    - varcheck         # Unused global variables and constants
-    - structcheck      # Unused struct fields
+    - unused           # Unused constants, variables, functions and types (replaces deadcode, varcheck, structcheck)
     
     # Performance
     - prealloc         # Slice preallocation
@@ -177,7 +181,6 @@ linters:
     # Style and best practices
     - goconst          # Repeated strings that could be constants
     - gocritic         # Comprehensive Go source code analysis
-    - maligned         # Struct alignment optimization
     - nakedret         # Naked returns in long functions
     - unparam          # Unused function parameters
     - whitespace       # Whitespace issues
