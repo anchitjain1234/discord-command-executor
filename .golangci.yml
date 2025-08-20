@@ -90,13 +90,12 @@ linters-settings:
   
   # Configure revive (replacement for golint)
   revive:
-    min-confidence: 0.8
     rules:
       - name: exported
         arguments: ["checkPrivateReceivers","sayRepetitiveInsteadOfStutters"]
   
-  # Configure gomnd (magic number detector)
-  gomnd:
+  # Configure mnd (magic number detector - gomnd was renamed to mnd)
+  mnd:
     # Don't include the "operation" and "assign"
     checks:
       - argument
@@ -137,9 +136,8 @@ linters-settings:
   unparam:
     check-exported: false
   
-  # Configure unused
-  unused:
-    check-exported: false
+  # Configure unused (no options available in newer versions)
+  # unused: {}
   
   # Configure whitespace
   whitespace:
@@ -174,6 +172,7 @@ linters:
     # Style and best practices
     - goconst          # Repeated strings that could be constants
     - gocritic         # Comprehensive Go source code analysis
+    - mnd              # Magic number detection
     - nakedret         # Naked returns in long functions
     - unparam          # Unused function parameters
     - whitespace       # Whitespace issues
@@ -205,7 +204,7 @@ issues:
     # Exclude some linters from running on tests files
     - path: _test\.go
       linters:
-        - gomnd
+        - mnd
         - goconst
         - dupl
         - lll
@@ -217,7 +216,7 @@ issues:
     
     # Exclude magic number detection for common values
     - linters:
-        - gomnd
+        - mnd
       text: "Magic number: (0|1|2|8|16|32|64|100|200|400|404|500|1000|1024)"
     
     # Exclude some staticcheck messages
