@@ -2,9 +2,10 @@
 name: discord-command-executor
 status: backlog
 created: 2025-08-20T18:08:18Z
-progress: 0%
+progress: 8%
+last_sync: 2025-08-20T19:57:01Z
 prd: .claude/prds/discord-command-executor.md
-github: [Will be updated when synced to GitHub]
+github: https://github.com/anchitjain1234/discord-command-executor/issues/1
 ---
 
 # Epic: Discord Command Executor
