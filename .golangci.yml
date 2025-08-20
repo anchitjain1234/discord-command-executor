@@ -1,5 +1,5 @@
 # golangci-lint configuration for Discord Command Executor
-# Version 2.x configuration format
+# Version 2.x configuration format - schema compliant
 version: "2"
 
 run:
@@ -9,12 +9,23 @@ run:
   build-tags:
     - integration
 
+# Simplified output configuration for v2
 output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
-  uniq-by-line: true
-  sort-results: true
+  formats:
+    text:
+      print-linter-name: true
+      print-issued-lines: true
+
+# Severity configuration
+severity:
+  default: error
+  rules:
+    - linters:
+        - dupl
+      severity: info
+    - linters:
+        - goconst
+      severity: info
 
 linters:
   # Use only specific linters (none by default)
@@ -69,7 +80,6 @@ linters:
     goconst:
       min-len: 3
       min-occurrences: 3
-      ignore-tests: false
       match-constant: true
       numbers: false
       ignore-calls: true
@@ -109,8 +119,6 @@ linters:
     
     misspell:
       locale: US
-      ignore-words:
-        - someword
     
     nakedret:
       max-func-lines: 30
@@ -127,27 +135,18 @@ linters:
       multi-if: false
       multi-func: false
 
-  # Issues exclusions
+  # Issues exclusions in v2 format
   exclusions:
-    exclude-dirs:
-      - vendor
-      - build
-      - scripts
-    
-    exclude-files:
+    paths:
+      - "vendor/"
+      - "build/"
+      - "scripts/"
       - ".*\\.pb\\.go$"
       - ".*_generated\\.go$"
     
-    exclude:
-      - "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked"
-      - "Error return value of `.*Close` is not checked"
-      - "Error return value of `os.Setenv` is not checked"
-      - "Error return value of `os.Unsetenv` is not checked"
-      - "Error return value of `.*ReadInConfig` is not checked"
-    
-    exclude-rules:
+    rules:
       # Exclude some linters from running on tests files
-      - path: _test\.go
+      - path: "_test\\.go$"
         linters:
           - mnd
           - goconst
@@ -165,7 +164,7 @@ linters:
         text: "Magic number: (0|0\\.5|1|2|8|10|16|32|64|100|128|200|400|404|500|1000|1024|4096|8080)"
       
       # Exclude ineffassign for error shadowing in tests
-      - path: _test\.go
+      - path: "_test\\.go$"
         text: "ineffectual assignment to err"
         linters:
           - ineffassign
@@ -174,18 +173,30 @@ linters:
       - linters:
           - govet
         text: "fieldalignment: struct.*Config.*could be"
-    
-    exclude-use-default: false
-    max-issues-per-linter: 50
-    max-same-issues: 3
-    new: false
-    fix: false
+      
+      # Exclude common error return value checks
+      - text: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked"
+        linters:
+          - errcheck
+      
+      - text: "Error return value of `.*Close` is not checked"
+        linters:
+          - errcheck
+      
+      - text: "Error return value of `os.Setenv` is not checked"
+        linters:
+          - errcheck
+      
+      - text: "Error return value of `os.Unsetenv` is not checked"
+        linters:
+          - errcheck
+      
+      - text: "Error return value of `.*ReadInConfig` is not checked"
+        linters:
+          - errcheck
 
 formatters:
   settings:
     goimports:
-      local-prefixes: github.com/anchitjain1234/discord-command-executor
-
-severity:
-  default-severity: error
-  case-sensitive: false
+      local-prefixes:
+        - github.com/anchitjain1234/discord-command-executor
