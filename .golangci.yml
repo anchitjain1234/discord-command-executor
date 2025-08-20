@@ -1,0 +1,255 @@
+# golangci-lint configuration for Discord Command Executor
+# This configuration provides comprehensive Go code analysis
+
+run:
+  # Timeout for analysis
+  timeout: 5m
+  
+  # Exit code when at least one issue was found
+  issues-exit-code: 1
+  
+  # Include test files in linting
+  tests: true
+  
+  # List of build tags to use for linting
+  build-tags:
+    - integration
+  
+  # Skip directories
+  skip-dirs:
+    - vendor
+    - build
+    - scripts
+  
+  # Skip files
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*_generated\\.go$"
+
+# Output configuration
+output:
+  # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions
+  format: colored-line-number
+  
+  # Print lines of code with issue
+  print-issued-lines: true
+  
+  # Print linter name in the end of issue text
+  print-linter-name: true
+  
+  # Make issues output unique by line
+  uniq-by-line: true
+  
+  # Add a prefix to the output file references
+  path-prefix: ""
+  
+  # Sort results by: filepath, line and column
+  sort-results: true
+
+# Linter settings
+linters-settings:
+  # Configure dupl to detect duplicate code
+  dupl:
+    threshold: 100
+  
+  # Configure errcheck to check for unchecked errors
+  errcheck:
+    # Report about not checking of errors in type assertions: `a := b.(MyStruct)`
+    check-type-assertions: true
+    
+    # Report about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`
+    check-blank: true
+    
+    # Exclude functions to check for errors
+    exclude-functions:
+      - io/ioutil.ReadFile
+      - io.Copy(*bytes.Buffer)
+      - io.Copy(os.Stdout)
+  
+  # Configure gocyclo for cyclomatic complexity
+  gocyclo:
+    min-complexity: 15
+  
+  # Configure goimports
+  goimports:
+    local-prefixes: github.com/anchitjain1234/discord-command-executor
+  
+  # Configure goconst to find repeated strings
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+    ignore-tests: false
+    match-constant: true
+    numbers: false
+    ignore-calls: true
+  
+  # Configure gocritic for various checks
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+  
+  # Configure golint
+  golint:
+    min-confidence: 0.8
+  
+  # Configure gomnd (magic number detector)
+  gomnd:
+    settings:
+      mnd:
+        # Don't include the "operation" and "assign"
+        checks: argument,case,condition,return
+  
+  # Configure lll for line length
+  lll:
+    line-length: 120
+    tab-width: 4
+  
+  # Configure maligned to detect structs that would take less memory if fields were sorted
+  maligned:
+    suggest-new: true
+  
+  # Configure misspell
+  misspell:
+    locale: US
+    ignore-words:
+      - someword
+  
+  # Configure nakedret for naked returns
+  nakedret:
+    max-func-lines: 30
+  
+  # Configure prealloc to find slice declarations that could potentially be preallocated
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: false
+  
+  # Configure unparam to find unused function parameters
+  unparam:
+    check-exported: false
+  
+  # Configure unused
+  unused:
+    check-exported: false
+  
+  # Configure whitespace
+  whitespace:
+    multi-if: false
+    multi-func: false
+
+# Linters configuration
+linters:
+  # Disable all linters by default
+  disable-all: true
+  
+  # Enable specific linters
+  enable:
+    # Error detection
+    - errcheck          # Checks for unchecked errors
+    - gosec            # Security issues
+    - govet            # Standard Go vet checks
+    
+    # Code quality
+    - gocyclo          # Cyclomatic complexity
+    - gofmt            # Code formatting
+    - goimports        # Import formatting
+    - golint           # Google's Go style guide
+    - ineffassign      # Ineffectual assignments
+    - misspell         # Spelling mistakes
+    - unconvert        # Unnecessary type conversions
+    - unused           # Unused constants, variables, functions and types
+    - deadcode         # Dead code detection
+    - varcheck         # Unused global variables and constants
+    - structcheck      # Unused struct fields
+    
+    # Performance
+    - prealloc         # Slice preallocation
+    
+    # Style and best practices
+    - goconst          # Repeated strings that could be constants
+    - gocritic         # Comprehensive Go source code analysis
+    - maligned         # Struct alignment optimization
+    - nakedret         # Naked returns in long functions
+    - unparam          # Unused function parameters
+    - whitespace       # Whitespace issues
+    
+    # Complexity
+    - dupl             # Code duplication
+    - lll              # Line length limit
+
+# Issues configuration
+issues:
+  # List of regexps of issue texts to exclude
+  exclude:
+    # Exclude some linters from running on tests files
+    - "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked"
+    
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gomnd
+        - goconst
+        - dupl
+        - lll
+    
+    # Exclude known linters from partially hard-to-fix issues
+    - linters:
+        - gocritic
+      text: "unnecessaryDefer:"
+    
+    # Exclude magic number detection for common values
+    - linters:
+        - gomnd
+      text: "Magic number: (0|1|2|8|16|32|64|100|200|400|404|500|1000|1024)"
+    
+    # Exclude some staticcheck messages
+    - linters:
+        - staticcheck
+      text: "SA9003:"
+    
+    # Exclude ineffassign for error shadowing in tests
+    - path: _test\.go
+      text: "ineffectual assignment to err"
+      linters:
+        - ineffassign
+  
+  # Independently from option `exclude` we use default exclude patterns
+  exclude-use-default: false
+  
+  # Maximum issues count per one linter
+  max-issues-per-linter: 50
+  
+  # Maximum count of issues with the same text
+  max-same-issues: 3
+  
+  # Show only new issues: if there are unstaged changes or untracked files,
+  # only those changes are analyzed
+  new: false
+  
+  # Fix found issues (if it's supported by the linter)
+  fix: false
+
+# Severity configuration
+severity:
+  # Default severity for issues
+  default-severity: error
+  
+  # Set the default severity for issues to rules matching the given regex
+  rules:
+    - linters:
+        - dupl
+      severity: info
+    - linters:
+        - goconst
+      severity: info
