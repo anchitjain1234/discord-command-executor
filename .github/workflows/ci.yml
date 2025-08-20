@@ -94,10 +94,10 @@ jobs:
         cache: true
     
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v6
       with:
         version: ${{ env.GOLANGCI_LINT_VERSION }}
-        args: --timeout=5m
+        args: --timeout=5m --out-format=colored-line-number
 
   # Job 3: Security scanning
   security:
