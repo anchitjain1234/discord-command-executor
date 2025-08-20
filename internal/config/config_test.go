@@ -10,8 +10,14 @@ import (
 
 func TestLoadConfigDefaults(t *testing.T) {
 	// Set required environment variable for testing
-	os.Setenv("DCE_BOT_TOKEN", "test.token.for.testing.purposes.only.this.is.not.real")
-	defer os.Unsetenv("DCE_BOT_TOKEN")
+	if err := os.Setenv("DCE_BOT_TOKEN", "test.token.for.testing.purposes.only.this.is.not.real"); err != nil {
+		t.Fatalf("Failed to set test environment variable: %v", err)
+	}
+	defer func() {
+		if err := os.Unsetenv("DCE_BOT_TOKEN"); err != nil {
+			t.Logf("Warning: Failed to unset test environment variable: %v", err)
+		}
+	}()
 
 	// Create a new Viper instance for this test to avoid global state issues
 	v := viper.New()
@@ -45,10 +51,12 @@ func TestLoadConfigDefaults(t *testing.T) {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	// Bind specific environment variables to ensure they're picked up during unmarshal
-	v.BindEnv("bot.token", "DCE_BOT_TOKEN")
+	if err := v.BindEnv("bot.token", "DCE_BOT_TOKEN"); err != nil {
+		t.Fatalf("Failed to bind environment variable: %v", err)
+	}
 
 	// Try to read config file (it's OK if it doesn't exist)
-	v.ReadInConfig()
+	_ = v.ReadInConfig() // Ignore error as config file is optional
 
 	// Unmarshal configuration
 	var config Config
@@ -192,15 +200,25 @@ func TestValidateRequiredFields(t *testing.T) {
 
 func TestEnvironmentVariableOverrides(t *testing.T) {
 	// Set environment variables
-	os.Setenv("DCE_BOT_TOKEN", "env.test.token.for.testing.purposes.only.not.real")
-	os.Setenv("DCE_BOT_PREFIX", ">>")
-	os.Setenv("DCE_DOCKER_HOST", "tcp://localhost:2376")
-	os.Setenv("DCE_LOGGING_LEVEL", "debug")
+	envVars := map[string]string{
+		"DCE_BOT_TOKEN":     "env.test.token.for.testing.purposes.only.not.real",
+		"DCE_BOT_PREFIX":    ">>",
+		"DCE_DOCKER_HOST":   "tcp://localhost:2376",
+		"DCE_LOGGING_LEVEL": "debug",
+	}
+
+	for key, value := range envVars {
+		if err := os.Setenv(key, value); err != nil {
+			t.Fatalf("Failed to set environment variable %s: %v", key, err)
+		}
+	}
+
 	defer func() {
-		os.Unsetenv("DCE_BOT_TOKEN")
-		os.Unsetenv("DCE_BOT_PREFIX")
-		os.Unsetenv("DCE_DOCKER_HOST")
-		os.Unsetenv("DCE_LOGGING_LEVEL")
+		for key := range envVars {
+			if err := os.Unsetenv(key); err != nil {
+				t.Logf("Warning: Failed to unset environment variable %s: %v", key, err)
+			}
+		}
 	}()
 
 	config, err := Load()

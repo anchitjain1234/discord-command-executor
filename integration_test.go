@@ -4,12 +4,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/anchitjain1234/discord-command-executor/internal/config"
 	"github.com/bwmarrin/discordgo"
 	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/anchitjain1234/discord-command-executor/internal/config"
 )
 
 // TestDependencyIntegration verifies that all core dependencies can be imported and instantiated

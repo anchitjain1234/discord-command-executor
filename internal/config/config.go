@@ -8,6 +8,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Default configuration constants
+const (
+	// Default timeouts in seconds
+	DefaultDockerTimeout = 30
+	DefaultMaxRuntime    = 300 // 5 minutes
+)
+
 // Config represents the application configuration
 type Config struct {
 	// Bot configuration
@@ -43,6 +50,12 @@ type DockerConfig struct {
 	// Docker host endpoint
 	Host string `mapstructure:"host"`
 
+	// Network name for containers
+	NetworkName string `mapstructure:"network_name"`
+
+	// CPU limit for containers (as fraction of CPU)
+	CPULimit float64 `mapstructure:"cpu_limit"`
+
 	// Default timeout for container operations (in seconds)
 	DefaultTimeout int `mapstructure:"default_timeout"`
 
@@ -51,12 +64,6 @@ type DockerConfig struct {
 
 	// Memory limit for containers (in MB)
 	MemoryLimit int `mapstructure:"memory_limit"`
-
-	// CPU limit for containers (as fraction of CPU)
-	CPULimit float64 `mapstructure:"cpu_limit"`
-
-	// Network name for containers
-	NetworkName string `mapstructure:"network_name"`
 }
 
 // LoggingConfig holds logging configuration
@@ -128,7 +135,7 @@ func Load() (*Config, error) {
 		"server.read_timeout",
 		"server.write_timeout",
 	}
-	
+
 	for _, key := range envBindings {
 		if err := viper.BindEnv(key); err != nil {
 			return nil, fmt.Errorf("failed to bind environment variable for %s: %w", key, err)
@@ -168,8 +175,8 @@ func setDefaults() {
 
 	// Docker defaults
 	viper.SetDefault("docker.host", "unix:///var/run/docker.sock")
-	viper.SetDefault("docker.default_timeout", 30)
-	viper.SetDefault("docker.max_runtime", 300)  // 5 minutes
+	viper.SetDefault("docker.default_timeout", DefaultDockerTimeout)
+	viper.SetDefault("docker.max_runtime", DefaultMaxRuntime)
 	viper.SetDefault("docker.memory_limit", 128) // 128 MB
 	viper.SetDefault("docker.cpu_limit", 0.5)    // 50% of one CPU
 	viper.SetDefault("docker.network_name", "discord-executor")

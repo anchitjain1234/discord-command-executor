@@ -5,6 +5,18 @@ import (
 	"strings"
 )
 
+// Validation constants
+const (
+	// Timeout limits in seconds
+	MaxDefaultTimeoutSeconds = 3600 // 1 hour
+	MaxRuntimeSeconds        = 7200 // 2 hours
+	MaxReadWriteTimeout      = 300  // 5 minutes
+
+	// Other validation constants
+	MinTokenLength     = 10 // Minimum test token length
+	MinRealTokenLength = 50 // Minimum real token length
+)
+
 // validateConfig validates the loaded configuration
 func validateConfig(config *Config) error {
 	var errors []string
@@ -83,15 +95,15 @@ func validateDockerConfig(config *DockerConfig) error {
 	if config.DefaultTimeout < 1 {
 		errors = append(errors, "default timeout must be at least 1 second")
 	}
-	if config.DefaultTimeout > 3600 {
-		errors = append(errors, "default timeout should not exceed 1 hour (3600 seconds)")
+	if config.DefaultTimeout > MaxDefaultTimeoutSeconds {
+		errors = append(errors, "default timeout should not exceed 1 hour")
 	}
 
 	if config.MaxRuntime < 1 {
 		errors = append(errors, "max runtime must be at least 1 second")
 	}
-	if config.MaxRuntime > 7200 {
-		errors = append(errors, "max runtime should not exceed 2 hours (7200 seconds)")
+	if config.MaxRuntime > MaxRuntimeSeconds {
+		errors = append(errors, "max runtime should not exceed 2 hours")
 	}
 
 	// Resource limit validations
@@ -169,14 +181,14 @@ func validateServerConfig(config *ServerConfig) error {
 	if config.ReadTimeout < 1 {
 		errors = append(errors, "read timeout must be at least 1 second")
 	}
-	if config.ReadTimeout > 300 {
+	if config.ReadTimeout > MaxReadWriteTimeout {
 		errors = append(errors, "read timeout should not exceed 300 seconds")
 	}
 
 	if config.WriteTimeout < 1 {
 		errors = append(errors, "write timeout must be at least 1 second")
 	}
-	if config.WriteTimeout > 300 {
+	if config.WriteTimeout > MaxReadWriteTimeout {
 		errors = append(errors, "write timeout should not exceed 300 seconds")
 	}
 
@@ -193,10 +205,10 @@ func isValidBotToken(token string) bool {
 	// and contain alphanumeric characters, dots, dashes, and underscores
 	// For testing purposes, we accept tokens that are obviously for testing
 	if strings.Contains(token, "test") || strings.Contains(token, "testing") {
-		return len(token) >= 10 // Minimal length for test tokens
+		return len(token) >= MinTokenLength
 	}
 
-	if len(token) < 50 {
+	if len(token) < MinRealTokenLength {
 		return false
 	}
 
