@@ -56,6 +56,8 @@ Dockerfile.local
 coverage.out
 *.coverprofile
 
-# Application specific
+# Application specific binaries
 bot
-discord-command-executor
+discord-command-executor.exe
+discord-command-executor.app
+/discord-command-executor
