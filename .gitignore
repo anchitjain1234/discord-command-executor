@@ -1,1 +1,61 @@
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Go compiled binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test binary, built with `go test -c`
+*.test
+
+# Go output binary
+*.out
+
+# Go modules
+go.sum
+
+# Go vendor directory
+vendor/
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+logs/
+
+# Configuration files that might contain secrets
+config.yaml
+config.json
+*.secret
+
+# Build artifacts
+dist/
+build/
+bin/
+
+# Docker
+.dockerignore
+Dockerfile.local
+
+# Testing
+coverage.out
+*.coverprofile
+
+# Application specific
+bot
+discord-command-executor
